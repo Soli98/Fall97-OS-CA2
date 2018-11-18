@@ -16,6 +16,7 @@
 
 using namespace std;
 
+#define LB_FIFO_PATH "./namedPipes/LB2PR"
 typedef struct Filter {
   string name;
   string value;
@@ -65,5 +66,10 @@ void decodeData(string message, vector<Entry>& decoded);
 void mergeData(vector<Entry>& totalData, vector<Entry>& decoded, Filter sort, CompClass Comp);
 void decodeAndMergeData(string message, vector<Entry>& workersDecodedData, CompClass Comp, Filter sort);
 void printData(vector<Entry>& data);
+void collectData(int prcCnt, vector<string>& pipeFiles, Filter& sortingValue, vector<Entry>& workersDecodedData);
+Filter extractSortFilter(vector<Filter>& filters);
+void parseFilters(vector<string>& fields);
+void runWorkers(vector<string>& files, vector<vector<string> >& workerFiles, string& directory, int prcCnt, vector<Filter>& filters, vector<string>& workerFilters);
+void runPresenter(Filter& sortingValue, int prcCnt);
 
 #endif
