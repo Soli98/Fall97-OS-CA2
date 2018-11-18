@@ -1,67 +1,65 @@
-#include <iostream>
-#include <string>
-#include <sstream>
-#include <vector>
-#include <fstream>
-#include <unistd.h>
-using namespace std;
+#include "header.h"
 
-typedef struct Field
-{
-  string name;
-  string value;
-} Field;
-
-typedef struct Entry
-{
-  vector<Field> fields;
-} Entry;
-
-vector<Entry> readFile(string filename) {
-  vector<Entry> data;
-  ifstream fd(filename);
-  string fieldsLine, fieldName, line, fieldValue;
-  vector<string> fieldNames;
-  getline(fd, fieldsLine);
-  stringstream ss(fieldsLine);
-  while(ss >> fieldName){
-    fieldNames.push_back(fieldName);
-  }
-  while (getline(fd, line)) {
-    Entry e;
-    stringstream ss(line);
-      for(int i = 0; i < fieldNames.size(); i++)
-      {
-        Field f;
-        f.name = fieldNames[i];
-        ss >> fieldValue;
-        f.value = fieldValue;
-        e.fields.push_back(f);
-      }
-    data.push_back(e);
-  }
-  return data;
-}
 
 int main(int argc, char const *argv[])
 {
-  cout << "Worker PID: " << getpid() << endl;
-  fprintf(stdout, "Hello. I'm a Worker.\n");
-  cout << "Files assigned to me:" << endl;
-  for(int i = 0; i < argc; i++)
-  {
-    cout << argv[i] << endl;
-  }
+  vector<Entry> data, filteredData;
   char buf[100];
   int readbytes = read(STDIN_FILENO, buf, 100);
   buf[readbytes] = '\0';
-  cout << "read " << readbytes << " bytes: " << buf << endl;
+  vector<string> fields;
+  string input(buf), field;
+  stringstream ss(input);
+  while(getline(ss, field, '-')) {
+    field = removeSpaces(field);
+    fields.push_back(field);
+  }
+  vector<Filter> filters;
+  filters = parseInput(fields);
+  for(int i = 0; i < argc; i++)
+  {
+    readFile(argv[i], data);
+  }
+  for(int i = 0; i < data.size(); i++)
+  {
+    bool isValid = true;
+    for(int j = 0; j < data[i].fields.size(); j++)
+    {
+      bool isValidFilter = true;
+      for(int k = 0; k < filters.size(); k++)
+      {
+        if (filters[k].name == data[i].fields[j].name) {
+          if(filters[k].value == data[i].fields[j].value) {
+            isValid = true;
+            isValidFilter = true;
+          }
+          else {
+            isValid = false;
+            isValidFilter = false;
+            break;
+          }
+        }
+      }
+      if(!isValidFilter) {
+        break;
+      }
+    }
+    if(isValid) {
+      filteredData.push_back(data[i]);
+    }
+  }
+  string serializedData = serializeData(filteredData);
   
-
+  if (serializedData == "") {
+    serializedData = "DONE\n";
+  }
   
-  vector<Entry> data;
-  string in;
-  data = readFile(argv[0]);
+  string fifoname = "./namedPipes/namedPipe" + to_string(getpid());
+  ofstream fifofile(fifoname);
+  mkfifo(fifoname.c_str(), 0666);
+  ofstream namedPipeFD2(fifoname);
+  namedPipeFD2.write(serializedData.c_str(), strlen(serializedData.c_str()) + 1);
+  namedPipeFD2.close();
   
   return 0;
 }

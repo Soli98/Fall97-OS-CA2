@@ -1,16 +1,16 @@
-COMPILER = g++ -g
+COMPILER = g++
 
-all : loadBalancer.cpp presenter.cpp worker.cpp
-	${COMPILER} -o loadBalancer loadBalancer.cpp && ${COMPILER} -o presenter presenter.cpp && ${COMPILER} -o worker worker.cpp
+all : header.h header.cpp loadBalancer.cpp presenter.cpp worker.cpp
+	${COMPILER} -o loadBalancer header.cpp loadBalancer.cpp && ${COMPILER} -o presenter header.cpp presenter.cpp && ${COMPILER} -o worker header.cpp worker.cpp
 
-loadBalancer : loadBalancer.cpp
-	${COMPILER} -o loadBalancer loadBalancer.cpp
+loadBalancer : header.h header.cpp loadBalancer.cpp
+	${COMPILER} -o loadBalancer header.cpp loadBalancer.cpp
 
-presenter : presenter.cpp
-	${COMPILER} -o presenter presenter.cpp
+presenter : header.h header.cpp presenter.cpp
+	${COMPILER} -o presenter header.cpp presenter.cpp
 
-worker : worker.cpp
-	${COMPILER} -o worker worker.cpp
+worker : header.h header.cpp worker.cpp
+	${COMPILER} -o worker header.cpp worker.cpp
 
 clean:
 	rm *.o loadBalancer presenter worker
